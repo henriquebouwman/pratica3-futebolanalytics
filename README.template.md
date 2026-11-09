@@ -2,7 +2,10 @@
 
 **Visão Computacional · CESAR School · 2026.2**
 
-**Grupo:** Alana Costa, Henrique Bouwman e Thiago Alves
+**Grupo:**
+- Alana Costa — accc@cesar.school
+- Henrique Bouwman — hvb@cesar.school
+- Thiago Alves — tam7@cesar.school
 
 Pipeline que parte de um trecho de transmissão de **Manchester United × Roma (UEFA Champions League, 03/11/2026)**: detecta, rastreia e projeta jogadores e bola no campo, em metros. Com isso, calcula posse, passes, distância, eXP (*expected pass*) e métricas táticas extras.
 
@@ -90,8 +93,14 @@ Processar os 5.106 quadros a 30 fps levaria ~1h50 numa máquina só.
 
 **Q2.3 — `imgsz` e `conf-bola`.**
 - O `imgsz` é o fator principal, como mostra a tabela.
-- Com `conf-bola = 0,10`, aparecem muitos falsos positivos. A figura `figuras/bola_falsos_positivos.png` mostra candidatos rejeitados pelo *gating* do Kalman: o goleiro reserva de amarelo na arquibancada, objetos brancos e, durante o close-up, a própria bola em escala gigante.
-- ⟪BOLA_FP_PCT⟫% dos candidatos ficam a mais de 40 px da bola aceita.
+- **Efeito do `conf-bola`** nas detecções brutas do YOLOv8s @1280, no clipe inteiro (`saidas/experimentos.json → conf_bola`):
+
+⟪TABELA_CONF_BOLA⟫
+
+  Baixar o limiar aumenta muito a cobertura, mas também os falsos positivos: em 0,10 há ~1,8 candidatos por quadro para uma bola só. Mantivemos 0,10 porque os filtros e o Kalman descartam os falsos, e subir o limiar perde a bola de vez.
+- **Falsos positivos:** os maiores eram objetos na torcida e nas placas (o goleiro reserva de amarelo, um funcionário de colete amarelo), cabeças carecas e meiões brancos. Todos foram removidos pelos filtros do `rastrear_v2.py` (ver Q4.1).
+- **O que sobra depois dos filtros** (`figuras/bola_falsos_positivos.png`): entre os candidatos que o Kalman **não usou** (⟪BOLA_FP_PCT⟫% ficam a mais de 40 px da bola final), os mais confiáveis são, em boa parte, **a bola verdadeira**. Isso acontece depois de um chute ou passe forte: a bola "pula" para fora do *gate* e o filtro continua a predição antiga por alguns quadros. É uma das causas dos passes perdidos (Q5.3).
+  - Testamos reiniciar o filtro sempre que aparece um candidato com conf ≥ 0,5 ou ≥ 0,7 fora do *gate* (`bola_kalman.py --reinicio-conf`). O F1 dos passes **não melhorou** (0,57 contra 0,59; `experimentos.json → kalman`), então isso não entrou na versão final.
 
 ---
 
@@ -101,11 +110,9 @@ Processar os 5.106 quadros a 30 fps levaria ~1h50 numa máquina só.
 
 Mesmo cache de detecções, sem vídeo:
 
-| Rastreador | IDs em 170 s |
-|---|---|
-| ByteTrack | 626 |
-| BoT-SORT + GMC | 525 |
-| BoT-SORT + GMC com buffer de 4 s | 512 |
+⟪TABELA_TRACK⟫
+
+(`saidas/experimentos.json → rastreadores`)
 
 Ficamos com o buffer de 2 s. O resultado final: **⟪N_TRACKS⟫ IDs** com ~14 pessoas visíveis por quadro, ou seja, **~⟪IDS_MIN⟫ IDs novos por minuto**. Ainda é muito.
 
@@ -142,7 +149,11 @@ O classificador usa (S·cos H, S·sin H, V) porque **o matiz é um ângulo**. O 
   A lista conferida visualmente está em `saidas/jogo1/goleiros.csv`: ⟪N_GK⟫ tracks. ⟪N_GK_ROMA⟫ deles estavam como Roma antes da correção. O `tracks.csv` original ficou em `tracks_antes_goleiro.csv`, e o `rastreado.mp4` é redesenhado com `rastrear_v2.py --goleiros`.
 - A lição para o K-Means de cor: uniforme cuja cor se parece com o gramado é um ponto cego do filtro de grama. A cor sozinha não basta para separar goleiros; um modelo com a classe *goalkeeper* (Q2.4) resolveria.
 
-**Q3.3 — `k=3`.** Usamos `k=3` desde o início.
+**Q3.3 — `k=3` × `k=2`.** Comparamos os dois nas mesmas 6.000 amostras de cor (`saidas/experimentos.json → k2_vs_k3`):
+- com **k=3**, os clusters têm ⟪K3_TAM⟫ amostras; o menor (⟪K3_OUT⟫) é árbitro e goleiros;
+- com **k=2**, **todas** essas ⟪K3_OUT⟫ amostras caem num dos dois times: no cluster cinza, que é o da Roma. Ou seja, o árbitro viraria "jogador da Roma" e roubaria posse e passes.
+
+Por isso usamos `k=3`.
 - **Vantagem:** o árbitro, de ciano, ficou isolado em "outros". Assim ele não "rouba" posse nem vira receptor de passe.
 - **Risco:** se o 3º cluster não for o árbitro, ele pode partir um dos times (por exemplo, o vermelho em sombra). Em trechos sem árbitro visível no início, o 3º cluster pode ficar sem sentido.
 
@@ -171,7 +182,12 @@ A linha do tempo está em `figuras/bola_cobertura.png`.
 Depois do Kalman, também removemos predições fora da imagem.
 - **Parâmetros do Kalman ajustados ao fps:** os padrões do professor (`--max-lacuna 15`, `--gate 6`) são para 25–30 fps. A 15 fps, 15 quadros são 1 s de bola "inventada", e o deslocamento entre quadros dobra, então o *gate* rejeitava a bola verdadeira depois de passes rápidos. Usamos `--max-lacuna 8` (≈ 0,5 s, o mesmo tempo do padrão a 30 fps) e `--gate 9`.
 
-  Testamos outras combinações contra a anotação manual, e o F1 dos passes variou de 0,41 a 0,59. Para não "decorar o gabarito", conferimos a escolha **separadamente em cada metade do clipe**. Com o padrão (15, 6), o F1 foi 0,46 na 1ª metade e 0,53 na 2ª. Com (8, 9), foi 0,58 e 0,59. A melhora aparece nas duas metades, mas os números finais de validação continuam um pouco otimistas.
+  Testamos outras combinações contra a anotação manual. Para não "decorar o gabarito", olhamos o F1 dos passes **separadamente em cada metade do clipe** (`saidas/experimentos.json → kalman`):
+
+⟪TABELA_KALMAN⟫
+
+  (8, 9) é a melhor nas duas metades. Mesmo assim, como a escolha usou a anotação, o F1 final é um pouco otimista.
+- **Exemplos** (`figuras/kalman_acerta_inventa.png`): no caso em que **acerta**, a bola fica 4 quadros sem detecção e a predição cai a 1 px de onde ela reaparece. No caso em que **inventa**, o filtro segue em linha reta por 8 quadros enquanto a bola, na verdade, foi lançada para o outro lado do campo.
 - **Onde ele "inventa":** quando a bola é chutada alto ou sai do quadro, a predição de velocidade constante continua em linha reta por até 8 quadros (≈ 0,5 s). No close-up (22,6–25 s), ele segue uma bola que não está mais na imagem.
 
 **Q4.2 — Calibração.**
@@ -266,7 +282,7 @@ A **posse é estável**: o United fica entre 67% e 69% em todos os raios de 20 a
 - Com raio pequeno, só ~23% dos quadros têm "dono", e passes com pouco contato são perdidos.
 - Com raio grande, a bola é atribuída a quem só passa perto, o que gera passes "falsos" entre jogadores próximos. A precisão dos passes do United cai de 74% para 56%.
 
-Comparamos com a anotação manual (tolerância 1 s): F1 de 0,52 (20 px), **0,59 (35 px)**, 0,51 (50 px) e 0,44 (65 px). O padrão do professor, 35 px, foi o melhor e foi mantido.
+Comparamos com a anotação manual (tolerância 1 s; `saidas/experimentos.json → raio_posse_f1`): ⟪TEXTO_RAIO_F1⟫. O padrão do professor, 35 px, foi o melhor e foi mantido.
 
 **Q5.3 — Validação manual.**
 - Anotamos à mão **54 passes** no vídeo de 30 fps (United 37, sendo 29 certos; Roma 17, sendo 10 certos). Arquivo: `saidas/jogo1/passes_anotados.csv`. O original, como exportado do Excel, está em `passes_anotados_original.csv`.
@@ -332,15 +348,23 @@ A versão em metros quase não detecta passes, porque só 8% dos quadros entram.
 
 **Q6.2 — Comparação dos modelos.**
 
-**Não foi possível avaliar o eXP com os dados deste trecho.**
-- Nos quadros com homografia verificada (≈ 8%), sobrou só ⟪N_PASSES_M⟫ passe em metros, e o `xpass.py` só consegue rodar o heurístico.
-- Uma execução anterior, com um filtro mais permissivo (só a aceitação da ancoragem), produziu 16 passes. Descartamos esse resultado, e por isso ele não está em `saidas/`, porque muitas posições estavam projetadas com a homografia errada: as AUCs variavam entre os modelos sem nenhum padrão.
+**Com a homografia verificada (≤ 3 px), não dá para avaliar o eXP:** sobra ⟪N_PASSES_M⟫ passe em metros, e o `xpass.py` só roda o heurístico.
 
-Isso mostra o ponto da questão: **com poucos passes, AUC, Brier e Log-Loss são instáveis.** Com 16 passes, trocar 1 rótulo muda a AUC em ~0,1. O logístico com validação cruzada fica pior que o baseline por sobreajuste.
+**Versão ilustrativa** (`saidas/jogo1_xp_ilustrativo/`): aceitando quadros com erro de reprojeção ≤ 15 px, sobram ⟪XP_N⟫ passes (⟪XP_CERTOS⟫% certos), e o script gera a tabela pedida:
 
-Para uma avaliação séria seria preciso juntar passes de outros trechos ou grupos (`--extra`). Como referência, Gomes et al. treinam com milhares de passes e chegam a AUC de 0,622.
+⟪TABELA_XP⟫
 
-**Q6.3 — Calibração.** Sem passes suficientes, não há curva de calibração confiável, então ela não foi gerada. Pelo desenho, o modelo heurístico (coeficientes fixos, intercepto 2,5) tende a prever probabilidades altas. Só uma curva de calibração com dezenas de passes mostraria se ele é otimista demais.
+**Como ler esta tabela:**
+- **Não dá para concluir nada sobre os modelos.** São ⟪XP_N⟫ passes, só ~4 errados. Trocar um rótulo muda a AUC em ~0,1. E 15 px de erro podem significar metros longe da câmera.
+- O heurístico aparece "melhor" por acaso. O logístico é avaliado com validação cruzada em ~3 passes por dobra.
+- Com poucos passes, AUC, Brier e Log-Loss têm intervalos de confiança enormes. Esse é justamente o ponto da Q6.2.
+- Para uma avaliação séria seria preciso juntar passes de outros trechos ou grupos (`--extra`). Como referência, Gomes et al. usam milhares de passes e chegam a AUC de 0,622.
+
+**Q6.3 — Calibração** (`saidas/jogo1_xp_ilustrativo/figuras/calibracao_xp.png`): média prevista × taxa observada:
+
+⟪TEXTO_XP_CALIB⟫
+
+Com tão poucos pontos, a curva só tem 1–2 faixas preenchidas e serve apenas para mostrar o método.
 
 **Q6.4 — Superfície de eXP.** A superfície gerada num quadro verificado (`figuras/superficie_xp_f470.png`, meio-campo) é coerente com a intuição tática:
 - **regiões quentes:** perto do passador e nos espaços sem adversários próximos;
@@ -348,7 +372,7 @@ Para uma avaliação séria seria preciso juntar passes de outros trechos ou gru
 
 É o mesmo comportamento da Fig. 1 de Gomes et al., mas com só 6 features no lugar de 17 canais.
 
-**Q6.5 — What-if e PAx** (`what_if.csv`, `jogadores_xp.csv`): Com 1 passe em metros, o *what-if* e o PAx não têm valor estatístico. O exemplo mostra só a mecânica: deslocar o destino 3–6 m e recalcular o eXP. Mesmo com dados completos, 3 minutos dão 1–3 passes por jogador, e o PAx por jogador seria ruído. Ele só faz sentido agregado em vários jogos.
+**Q6.5 — What-if e PAx** (`saidas/jogo1_xp_ilustrativo/what_if.csv` e `jogadores_xp.csv`): na versão ilustrativa, deslocar o destino 3–6 m daria ganho médio de eXP de ⟪XP_WHATIF⟫. Mas, com ⟪XP_N⟫ passes, o *what-if* e o PAx não têm valor estatístico: nenhum jogador tem mais de 1–2 passes. O exemplo mostra só a mecânica: deslocar o destino 3–6 m e recalcular o eXP. Mesmo com dados completos, 3 minutos dão 1–3 passes por jogador, e o PAx por jogador seria ruído. Ele só faz sentido agregado em vários jogos.
 
 ---
 
@@ -424,13 +448,15 @@ python sensibilidade_raio.py --saida $S
 python metricas_extras.py --saida $S
 python xpass.py --saida $S --what-if
 python figuras_deteccao.py --saida $S
+python experimentos.py          # refaz os experimentos citados no README → saidas/experimentos.json
+# eXP ilustrativo (erro de reprojeção ≤ 15 px): ver saidas/jogo1_xp_ilustrativo/LEIA.md
 python video_radar.py --saida $S --inicio 0 --fim 120     # vídeo da apresentação (vai para o Drive)
 # comparação de modelos (Parte 2)
 python comparar_modelos.py ../dados/mun_rom_0713_1003.mp4 yolov8s.pt 1280 0 900
 ```
 
 **Estrutura:**
-- `src/`: scripts. Os do professor (`vc-20262-p3`) mais os nossos: `detectar_cache.py`, `rastrear_cache.py` (v1), `rastrear_v2.py`, `corrigir_goleiros.py`, `filtrar_bola_gramado.py`, `calibrar_linhas.py`, `sementes_camera.py`, `camera_linhas.py`, `filtrar_projecao.py`, `checar_camera.py`, `metricas_extras.py`, `sensibilidade_raio.py`, `figuras_deteccao.py`, `video_radar.py`, `comparar_modelos.py` e `preencher_readme.py`.
+- `src/`: scripts. Os do professor (`vc-20262-p3`) mais os nossos: `detectar_cache.py`, `rastrear_cache.py` (v1), `rastrear_v2.py`, `corrigir_goleiros.py`, `filtrar_bola_gramado.py`, `calibrar_linhas.py`, `sementes_camera.py`, `camera_linhas.py`, `filtrar_projecao.py`, `checar_camera.py`, `metricas_extras.py`, `sensibilidade_raio.py`, `figuras_deteccao.py`, `video_radar.py`, `comparar_modelos.py`, `experimentos.py` e `preencher_readme.py`.
 - `saidas/jogo1/`: CSVs e JSONs gerados, mais a anotação manual. Os vídeos ficam de fora.
 - `saidas/comparacao_modelos/`: Parte 2.
 - `figuras/`: todas as figuras.
@@ -450,4 +476,4 @@ Usamos o **Claude (Anthropic)** como assistente de programação e de redação.
 - conferiu visualmente o `rastreado.mp4` (foi assim que identificamos o goleiro do United classificado como Roma), a calibração e o mosaico de reprojeção;
 - revisou e reescreveu a análise.
 
-Os scripts de partida são do repositório da disciplina (`eron93br/vc-20262-p3`). [REVISAR: o grupo deve ajustar esta declaração ao que de fato fez.]
+Os scripts de partida são do repositório da disciplina (`eron93br/vc-20262-p3`).

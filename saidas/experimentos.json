@@ -1,0 +1,140 @@
+{
+  "rastreadores": [
+    {
+      "rastreador": "ByteTrack (buffer 2 s)",
+      "ids": 626,
+      "duracao_mediana_quadros": 24.0
+    },
+    {
+      "rastreador": "BoT-SORT + GMC (buffer 2 s)",
+      "ids": 525,
+      "duracao_mediana_quadros": 25.0
+    },
+    {
+      "rastreador": "BoT-SORT + GMC (buffer 4 s)",
+      "ids": 515,
+      "duracao_mediana_quadros": 26.0
+    }
+  ],
+  "k2_vs_k3": {
+    "k3_tamanhos_clusters": [
+      2848,
+      2625,
+      527
+    ],
+    "k2_tamanhos_clusters": [
+      2855,
+      3145
+    ],
+    "amostras_do_3o_cluster_k3": 527,
+    "com_k2_essas_amostras_vao_para_cluster": {
+      "0": 0,
+      "1": 527
+    }
+  },
+  "conf_bola": [
+    {
+      "conf_min": 0.1,
+      "pct_quadros_com_bola": 89.2,
+      "candidatos_por_quadro": 1.81
+    },
+    {
+      "conf_min": 0.2,
+      "pct_quadros_com_bola": 73.5,
+      "candidatos_por_quadro": 1.07
+    },
+    {
+      "conf_min": 0.3,
+      "pct_quadros_com_bola": 57.9,
+      "candidatos_por_quadro": 0.71
+    },
+    {
+      "conf_min": 0.5,
+      "pct_quadros_com_bola": 26.8,
+      "candidatos_por_quadro": 0.29
+    }
+  ],
+  "kalman": [
+    {
+      "max_lacuna": 15,
+      "gate": 6,
+      "reinicio_conf": null,
+      "passes": 45,
+      "f1_inteiro": 0.485,
+      "f1_1a_metade": 0.432,
+      "f1_2a_metade": 0.516
+    },
+    {
+      "max_lacuna": 8,
+      "gate": 6,
+      "reinicio_conf": null,
+      "passes": 57,
+      "f1_inteiro": 0.541,
+      "f1_1a_metade": 0.489,
+      "f1_2a_metade": 0.576
+    },
+    {
+      "max_lacuna": 15,
+      "gate": 9,
+      "reinicio_conf": null,
+      "passes": 43,
+      "f1_inteiro": 0.515,
+      "f1_1a_metade": 0.486,
+      "f1_2a_metade": 0.533
+    },
+    {
+      "max_lacuna": 8,
+      "gate": 9,
+      "reinicio_conf": null,
+      "passes": 51,
+      "f1_inteiro": 0.59,
+      "f1_1a_metade": 0.55,
+      "f1_2a_metade": 0.615
+    },
+    {
+      "max_lacuna": 8,
+      "gate": 9,
+      "reinicio_conf": 0.5,
+      "passes": 58,
+      "f1_inteiro": 0.571,
+      "f1_1a_metade": 0.558,
+      "f1_2a_metade": 0.58
+    },
+    {
+      "max_lacuna": 8,
+      "gate": 9,
+      "reinicio_conf": 0.7,
+      "passes": 52,
+      "f1_inteiro": 0.566,
+      "f1_1a_metade": 0.55,
+      "f1_2a_metade": 0.576
+    }
+  ],
+  "raio_posse_f1": [
+    {
+      "raio_px": 20,
+      "passes": 34,
+      "f1": 0.523
+    },
+    {
+      "raio_px": 35,
+      "passes": 51,
+      "f1": 0.59
+    },
+    {
+      "raio_px": 50,
+      "passes": 56,
+      "f1": 0.509
+    },
+    {
+      "raio_px": 65,
+      "passes": 59,
+      "f1": 0.442
+    },
+    {
+      "raio_px": 80,
+      "passes": 58,
+      "f1": 0.446
+    }
+  ]
+}

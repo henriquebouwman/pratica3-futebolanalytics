@@ -133,6 +133,29 @@ def main():
                   c["py"].to_numpy() - bi.loc[c["frame"], "py"].to_numpy())
     v["BOLA_FP_PCT"] = fmt(100 * (dd > 40).mean(), 0)
 
+    ex2 = json.loads((R / "saidas" / "experimentos.json").read_text())
+    v["TABELA_CONF_BOLA"] = md(pd.DataFrame(ex2["conf_bola"]).rename(columns={
+        "conf_min": "conf mínima", "pct_quadros_com_bola": "% quadros com bola", "candidatos_por_quadro": "candidatos/quadro"}))
+    v["TABELA_TRACK"] = md(pd.DataFrame(ex2["rastreadores"]).rename(columns={
+        "rastreador": "Rastreador", "ids": "IDs em 170 s", "duracao_mediana_quadros": "duração mediana (quadros)"}))
+    k = ex2["k2_vs_k3"]
+    v["K3_TAM"] = " / ".join(map(str, k["k3_tamanhos_clusters"]))
+    v["K3_OUT"] = k["amostras_do_3o_cluster_k3"]
+    kd = pd.DataFrame(ex2["kalman"]).fillna("—")
+    kd.columns = ["max-lacuna", "gate", "reinício conf", "passes", "F1 inteiro", "F1 1ª metade", "F1 2ª metade"]
+    v["TABELA_KALMAN"] = md(kd)
+    v["TEXTO_RAIO_F1"] = ", ".join(f"{fmt(r['f1'], 2)} ({r['raio_px']} px)" for r in ex2["raio_posse_f1"])
+    X = R / "saidas" / "jogo1_xp_ilustrativo"
+    xf = pd.read_csv(X / "passes_features.csv")
+    v["XP_N"] = len(xf)
+    v["XP_CERTOS"] = fmt(100 * xf["sucesso"].mean(), 0)
+    xr = pd.read_csv(X / "resultados_xp.csv").rename(columns={"Unnamed: 0": "modelo"})
+    v["TABELA_XP"] = md(xr.round(3))
+    v["TEXTO_XP_CALIB"] = "; ".join(f"{r['modelo']}: prevista {fmt(r['média prevista'], 2)} × observada {fmt(r['taxa observada'], 2)}"
+                                    for _, r in xr.iterrows())
+    wi = pd.read_csv(X / "what_if.csv")
+    col = [c for c in wi.columns if "ganho" in c.lower()]
+    v["XP_WHATIF"] = fmt(wi[col[0]].mean(), 2) if col else "—"
     for k, val_ in v.items():
         t = t.replace(f"⟪{k}⟫", str(val_))
     (R / "README.md").write_text(t)

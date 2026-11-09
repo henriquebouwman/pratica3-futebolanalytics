@@ -69,10 +69,11 @@ class KalmanBola:
         self.P = (np.eye(4) - K @ self.Hm) @ self.P
 
 
-def filtrar_bola(det: pd.DataFrame, n_frames: int, max_lacuna: int, gate: float) -> pd.DataFrame:
+def filtrar_bola(det: pd.DataFrame, n_frames: int, max_lacuna: int, gate: float, reinicio_conf: float | None = None) -> pd.DataFrame:
     """det: DataFrame com frame, px, py, conf (pode haver vários candidatos por quadro)."""
     por_frame = {f: g.sort_values("conf", ascending=False)[["px", "py"]].to_numpy(float)
                  for f, g in det.groupby("frame")}
+    conf_max = det.groupby("frame")["conf"].max().to_dict()
     kf = KalmanBola()
     linhas, lacuna = [], 0
 
@@ -98,6 +99,12 @@ def filtrar_bola(det: pd.DataFrame, n_frames: int, max_lacuna: int, gate: float)
             kf.corrigir(z)
             lacuna = 0
             linhas.append((f, kf.x[0], kf.x[1], "detectada"))
+        elif reinicio_conf and cand is not None and conf_max.get(f, 0) >= reinicio_conf:
+            # (grupo) candidato MUITO confiável fora do gate: o filtro provavelmente está
+            # seguindo outra coisa (ou a bola foi chutada). Reinicia nele em vez de prever.
+            kf.iniciar(*cand[0])
+            lacuna = 0
+            linhas.append((f, *cand[0], "detectada"))
         else:
             lacuna += 1
             if lacuna <= max_lacuna:
@@ -115,6 +122,8 @@ def main():
     p.add_argument("--saida", required=True, help="Pasta com tracks.csv e meta.json")
     p.add_argument("--max-lacuna", type=int, default=15, help="Quadros máximos preditos sem detecção")
     p.add_argument("--gate", type=float, default=6.0, help="Limiar de Mahalanobis para aceitar detecção")
+    p.add_argument("--reinicio-conf", type=float, default=None,
+                   help="(grupo) Reinicia o filtro num candidato com conf >= este valor fora do gate")
     a = p.parse_args()
 
     pasta = Path(a.saida)
@@ -122,7 +131,7 @@ def main():
     tracks = pd.read_csv(pasta / "tracks.csv")
     det = tracks[tracks["classe"] == "bola"][["frame", "px", "py", "conf"]]
 
-    bola = filtrar_bola(det, meta["n_frames"], a.max_lacuna, a.gate)
+    bola = filtrar_bola(det, meta["n_frames"], a.max_lacuna, a.gate, a.reinicio_conf)
     bola.to_csv(pasta / "bola.csv", index=False)
 
     n = meta["n_frames"]

@@ -76,7 +76,7 @@ def main():
     for ax in axs.ravel():
         ax.axis("off")
     pct = 100 * (cand["d"] > 40).mean() if len(cand) else 0
-    fig.suptitle(f"Candidatos a bola rejeitados pelo gating ({pct:.0f}% dos candidatos estão a >40 px da bola aceita)")
+    fig.suptitle(f"Candidatos a bola NÃO usados pelo Kalman (a >40 px da bola final; {pct:.0f}% dos candidatos) — mais confiáveis primeiro")
     fig.tight_layout()
     fig.savefig(fig_dir / "bola_falsos_positivos.png", dpi=130)
     plt.close(fig)
@@ -95,6 +95,41 @@ def main():
     fig.tight_layout()
     fig.savefig(fig_dir / "bola_cobertura.png", dpi=130)
     plt.close(fig)
+    # 4. Kalman: um trecho em que a predição acerta e um em que "inventa"
+    b2 = bola.reset_index()
+    b2["run"] = (b2["fonte"] != b2["fonte"].shift()).cumsum()
+    casos = []
+    for _, g in b2.groupby("run"):
+        if g["fonte"].iloc[0] != "kalman" or len(g) < 4:
+            continue
+        prox = b2[(b2["frame"] > g["frame"].max()) & (b2["fonte"] == "detectada")].head(1)
+        if prox.empty or prox["frame"].iloc[0] - g["frame"].max() > 1:
+            continue
+        ult = g.iloc[-1]
+        erro = float(np.hypot(ult["px"] - prox["px"].iloc[0], ult["py"] - prox["py"].iloc[0]))
+        casos.append((erro, g, prox.iloc[0]))
+    if casos:
+        casos.sort(key=lambda c: c[0])
+        fig, axs = plt.subplots(2, 2, figsize=(13, 7.6))
+        for lin, (rot, (erro, g, prox)) in enumerate([("ACERTA", casos[0]), ("INVENTA", casos[-1])]):
+            for col, (f, pts, titulo) in enumerate([
+                    (int(g["frame"].iloc[len(g) // 2]), g, f"predição do Kalman ({len(g)} quadros sem bola aceita)"),
+                    (int(prox["frame"]), None, "quadro seguinte: bola detectada")]):
+                fr = cv2.cvtColor(quadro(f), cv2.COLOR_BGR2RGB)
+                ax = axs[lin, col]
+                ax.imshow(fr)
+                if pts is not None:
+                    ax.plot(pts["px"], pts["py"], "o-", color="#f2a541", ms=4, lw=2, label="trajetória prevista")
+                    ax.legend(loc="lower right", fontsize=8)
+                else:
+                    ax.plot(g["px"].iloc[-1], g["py"].iloc[-1], "x", color="#f2a541", ms=14, mew=3, label="última predição")
+                    ax.plot(prox["px"], prox["py"], "o", mfc="none", mec="#2a9d8f", ms=18, mew=3, label="bola detectada")
+                    ax.legend(loc="lower right", fontsize=8)
+                ax.set_title(f"{rot} · quadro {f} ({f / meta['fps']:.1f} s) · {titulo}" + (f" · erro {erro:.0f} px" if pts is None else ""), fontsize=9)
+                ax.axis("off")
+        fig.tight_layout()
+        fig.savefig(fig_dir / "kalman_acerta_inventa.png", dpi=110)
+        plt.close(fig)
     print("figuras ok")
 
 
