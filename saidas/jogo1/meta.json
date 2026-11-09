@@ -1,0 +1,35 @@
+{
+  "video": "../dados/clip15.mp4",
+  "modelo": "yolov8s.pt",
+  "device": "cpu",
+  "fps": 15.0,
+  "largura": 1280,
+  "altura": 720,
+  "n_frames": 2553,
+  "inicio_s": 0.0,
+  "imgsz": 1280,
+  "conf": 0.3,
+  "conf_bola": 0.1,
+  "k": 3,
+  "tracker": "botsort",
+  "track_buffer": 30,
+  "janela_moda_time": 15,
+  "pipeline": "detectar_cache.py + rastrear_v2.py",
+  "times_bgr": {
+    "0": [
+      78,
+      110,
+      175
+    ],
+    "1": [
+      63,
+      105,
+      112
+    ],
+    "-2": [
+      156,
+      156,
+      110
+    ]
+  }
+}

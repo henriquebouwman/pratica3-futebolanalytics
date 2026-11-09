@@ -1,0 +1,55 @@
+t_s,time,sucesso,cor,obs
+0.0654,0,1,vermelho,
+4.653,0,0,vermelho,interceptado
+8.405,1,0,cinza,interceptado
+10.655,0,1,vermelho,
+14.1,0,1,vermelho,
+15.8,0,0,vermelho,interceptado
+18.251,1,1,cinza,
+26.755,1,1,cinza,
+27.4,1,1,cinza,
+28.438,1,1,cinza,
+30.9,1,1,cinza,
+33.6,1,1,cinza,
+39.6,1,0,cinza,interceptado
+43.4,0,1,vermelho,
+47.4,0,1,vermelho,
+61.9,0,1,vermelho,
+64.7,0,0,vermelho,passe pra fora
+81.0,1,0,cinza,lateral interceptado
+82.0,0,1,vermelho,
+83.903,0,1,vermelho,
+86.4,0,1,vermelho,
+92.0,0,1,vermelho,
+92.95,0,1,vermelho,
+95.0,0,0,vermelho,interceptado
+99.0,1,0,cinza,interceptado
+103.569,0,0,vermelho,interceptado
+105.405,1,1,cinza,
+107.401,1,0,cinza,passe errado
+110.0,0,1,vermelho,
+111.0,0,1,vermelho,
+114.155,0,0,vermelho,interceptado
+116.448,1,1,cinza,
+118.238,1,0,cinza,passe errado
+121.487,0,1,vermelho,
+122.0,0,1,vermelho,
+128.0,0,0,vermelho,interceptado
+130.322,1,1,cinza,
+133.319,1,0,cinza,interceptado
+136.312,0,1,vermelho,
+139.298,0,1,vermelho,
+143.488,0,1,vermelho,
+146.739,0,1,vermelho,
+150.922,0,1,vermelho,
+151.3,0,1,vermelho,
+152.0,0,1,vermelho,
+155.0,0,1,vermelho,
+156.655,0,1,vermelho,
+157.155,0,1,vermelho,
+158.901,0,1,vermelho,
+162.155,0,1,vermelho,
+163.814,0,1,vermelho,
+164.486,0,1,vermelho,
+167.1,0,0,vermelho,passe errado
+168.358,1,1,cinza,

@@ -1,0 +1,6 @@
+modelo,imgsz,quadros,fps_inferencia,jogadores_por_quadro,pct_quadros_com_bola,deteccoes_bola_por_quadro,conf_media_bola
+yolov8n,640,450,17.36,12.06,33.0,0.39,0.358
+yolov8s,640,450,6.07,12.79,54.6,0.79,0.369
+yolov8m,1280,450,0.58,13.59,93.8,2.18,0.477
+yolov8n,1280,450,4.82,13.63,92.2,2.0,0.453
+yolov8s,1280,450,1.57,13.62,91.3,2.15,0.448

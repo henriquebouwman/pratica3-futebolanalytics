@@ -1,0 +1,26 @@
+{
+  "unidade": "m",
+  "raio_posse": 2.0,
+  "direcao_ataque": {
+    "0": "esquerda",
+    "1": "direita"
+  },
+  "quadros_com_bola": 199,
+  "quadros_total": 2553,
+  "max_lacuna_posse": 30,
+  "posse_indefinida_pct_dos_quadros": 93.0,
+  "time0": {
+    "posse_pct": 53.9,
+    "passes": 1,
+    "passes_certos": 1,
+    "precisao_pct": 100.0,
+    "distancia_total": 307.4
+  },
+  "time1": {
+    "posse_pct": 46.1,
+    "passes": 1,
+    "passes_certos": 1,
+    "precisao_pct": 100.0,
+    "distancia_total": 212.9
+  }
+}

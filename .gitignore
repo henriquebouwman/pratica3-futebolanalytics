@@ -1,0 +1,9 @@
+# vídeos e dados brutos NÃO vão para o repositório (enviar pelo Google Drive)
+*.mp4
+*.avi
+*.mov
+*.mkv
+dados/
+*.pt
+__pycache__/
+logs/

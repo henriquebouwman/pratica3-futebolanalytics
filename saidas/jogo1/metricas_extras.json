@@ -1,0 +1,22 @@
+{
+  "passo_amostragem": 5,
+  "quadros_amostrados": 42,
+  "time0": {
+    "n_visiveis_medio": 6.8,
+    "largura_media_m": 30.2,
+    "profundidade_media_m": 20.2,
+    "area_hull_media_m2": 566.0,
+    "linha_def_media_x": 76.1,
+    "controle_voronoi_medio_pct": 57.0,
+    "pressao_sofrida_media_n5m": 0.21
+  },
+  "time1": {
+    "n_visiveis_medio": 5.2,
+    "largura_media_m": 25.0,
+    "profundidade_media_m": 18.9,
+    "area_hull_media_m2": 449.0,
+    "linha_def_media_x": 57.3,
+    "controle_voronoi_medio_pct": 43.0,
+    "pressao_sofrida_media_n5m": 0.34
+  }
+}

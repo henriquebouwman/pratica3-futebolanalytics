@@ -1,0 +1,26 @@
+{
+  "unidade": "px",
+  "raio_posse": 35.0,
+  "direcao_ataque": {
+    "0": "esquerda",
+    "1": "direita"
+  },
+  "quadros_com_bola": 2149,
+  "quadros_total": 2553,
+  "max_lacuna_posse": 30,
+  "posse_indefinida_pct_dos_quadros": 26.1,
+  "time0": {
+    "posse_pct": 67.1,
+    "passes": 33,
+    "passes_certos": 23,
+    "precisao_pct": 69.7,
+    "distancia_total": 101743.7
+  },
+  "time1": {
+    "posse_pct": 32.9,
+    "passes": 18,
+    "passes_certos": 8,
+    "precisao_pct": 44.4,
+    "distancia_total": 98959.1
+  }
+}

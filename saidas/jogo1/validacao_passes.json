@@ -1,0 +1,20 @@
+{
+  "tol_1s": {
+    "detectados": 2,
+    "anotados": 54,
+    "casados": 2,
+    "precisao": 1.0,
+    "revocacao": 0.037,
+    "f1": 0.071,
+    "acordo_sucesso": 1.0
+  },
+  "tol_2s": {
+    "detectados": 2,
+    "anotados": 54,
+    "casados": 2,
+    "precisao": 1.0,
+    "revocacao": 0.037,
+    "f1": 0.071,
+    "acordo_sucesso": 1.0
+  }
+}
